@@ -1,6 +1,5 @@
 import {
   ChannelType,
-  EmbedBuilder,
   PermissionFlagsBits
 } from 'discord.js';
 
@@ -60,30 +59,11 @@ export default {
       ]
     });
 
-    await channel.send({
-      content: `<@&${STAFF_ROLE_ID}>`,
-      embeds: [
-        new EmbedBuilder()
-          .setTitle('Nieuw ModMail ticket')
-          .setDescription(`Er is een nieuw ModMail ticket geopend door <@${userId}>.`)
-          .addFields(
-            { name: 'Gebruiker', value: `<@${userId}>`, inline: true },
-            { name: 'User ID', value: userId, inline: true },
-            { name: 'Sluiten', value: 'Gebruik `/modmail-close` in dit kanaal.' }
-          )
-          .setColor(0x5865f2)
-          .setTimestamp()
-      ]
-    });
+    await channel.send(`Nieuw ModMail ticket van <@${userId}>`);
 
     await interaction.update({
-      embeds: [
-        new EmbedBuilder()
-          .setTitle('Ticket geopend')
-          .setDescription('Je ModMail ticket is geopend. Het staffteam kan je nu antwoorden.')
-          .setColor(0x57f287)
-          .setTimestamp()
-      ],
+      content: 'Ticket geopend.',
+      embeds: [],
       components: []
     });
   }
