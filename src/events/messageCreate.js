@@ -13,12 +13,6 @@ import { checkRateLimit } from '../utils/rateLimiter.js';
 const MESSAGE_XP_RATE_LIMIT_ATTEMPTS = 12;
 const MESSAGE_XP_RATE_LIMIT_WINDOW_MS = 10000;
 const MODMAIL_CATEGORY_ID = process.env.MODMAIL_CATEGORY_ID || '1498650880604639272';
-const MODMAIL_COLORS = {
-  primary: 0x5865f2,
-  user: 0x57f287,
-  staff: 0xfee75c,
-  error: 0xed4245
-};
 
 export default {
   name: Events.MessageCreate,
@@ -54,22 +48,15 @@ async function handleModmailDm(message, client) {
 
   if (ticket) {
     await ticket.send({
-      embeds: [createUserMessageEmbed(message)],
+      content: `User ${message.author.tag}: ${message.content || '(no text)'}`,
       files: [...message.attachments.values()].map(attachment => attachment.url)
     });
     return;
   }
 
   const embed = new EmbedBuilder()
-    .setTitle('ModMail ticket openen')
-    .setDescription('Wil je een support ticket openen met het staffteam?')
-    .setColor(MODMAIL_COLORS.primary)
-    .addFields({
-      name: 'Jouw bericht',
-      value: formatMessageContent(message.content)
-    })
-    .setFooter({ text: 'Klik op Ja om een ticket te openen.' })
-    .setTimestamp();
+    .setTitle('ModMail')
+    .setDescription('Weet je zeker dat je een ticket wilt openen?');
 
   const row = new ActionRowBuilder()
     .addComponents(
@@ -99,43 +86,15 @@ async function handleModmailStaffReply(message, client) {
 
   const user = await client.users.fetch(message.channel.topic).catch(() => null);
   if (!user) {
-    await message.reply({
-      embeds: [
-        new EmbedBuilder()
-          .setTitle('Gebruiker niet gevonden')
-          .setDescription('Ik kan de gebruiker voor dit ModMail ticket niet vinden.')
-          .setColor(MODMAIL_COLORS.error)
-          .setTimestamp()
-      ]
-    });
+    await message.reply('I could not find the user for this modmail ticket.');
     return true;
   }
 
-  const staffName = message.member?.displayName || message.author.username;
   await user.send({
-    embeds: [
-      new EmbedBuilder()
-        .setTitle('Antwoord van staff')
-        .setAuthor({
-          name: staffName,
-          iconURL: message.author.displayAvatarURL()
-        })
-        .setDescription(formatMessageContent(message.content))
-        .setColor(MODMAIL_COLORS.staff)
-        .setFooter({ text: `Je praat met ${staffName}` })
-        .setTimestamp()
-    ],
+    content: `Staff: ${message.content || '(no text)'}`,
     files: [...message.attachments.values()].map(attachment => attachment.url)
   }).catch(async () => {
-    await message.reply({
-      embeds: [
-        new EmbedBuilder()
-          .setTitle('DM versturen mislukt')
-          .setDescription('Ik kan deze gebruiker geen DM sturen. De DMs staan misschien dicht.')
-          .setColor(MODMAIL_COLORS.error)
-          .setTimestamp()
-      ]
-    });
+    await message.reply('I could not DM this user. Their DMs may be closed.');
   });
 
   return true;
@@ -217,32 +176,4 @@ async function handleLeveling(message, client) {
   } catch (error) {
     logger.error('Error handling leveling for message:', error);
   }
-}
-
-function createUserMessageEmbed(message) {
-  const attachmentCount = message.attachments.size;
-  const embed = new EmbedBuilder()
-    .setTitle('Nieuw bericht van gebruiker')
-    .setAuthor({
-      name: message.author.tag,
-      iconURL: message.author.displayAvatarURL()
-    })
-    .setDescription(formatMessageContent(message.content))
-    .setColor(MODMAIL_COLORS.user)
-    .setFooter({ text: `User ID: ${message.author.id}` })
-    .setTimestamp();
-
-  if (attachmentCount > 0) {
-    embed.addFields({
-      name: 'Bijlagen',
-      value: `${attachmentCount} bijlage${attachmentCount === 1 ? '' : 'n'} meegestuurd.`
-    });
-  }
-
-  return embed;
-}
-
-function formatMessageContent(content) {
-  const trimmedContent = content?.trim();
-  return trimmedContent?.length ? trimmedContent.slice(0, 4096) : '(geen tekst)';
 }
