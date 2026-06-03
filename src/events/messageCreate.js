@@ -1,4 +1,8 @@
-// MODMAIL
+console.log(
+  "Message ontvangen:",
+  message.author.tag,
+  message.guild ? "SERVER" : "DM"
+);// MODMAIL
 if (message.author.bot) return;
 
 if (!message.guild) {
